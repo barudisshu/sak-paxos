@@ -1,0 +1,8 @@
+[package]
+name = "sak-paxos"
+version = "0.1.0"
+authors = ["Galudisu <galudisu@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+t_bang = "0.1.2"
