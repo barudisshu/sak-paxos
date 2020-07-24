@@ -1,4 +1,7 @@
+dist: trusty
 language: rust
+sudo: true
+
 rust:
   - stable
   - beta
@@ -17,6 +20,27 @@ env:
 matrix:
   allow_failures:
     - rust: nightly
+  include:
+    - os: linux
+      rust: 1.40.0
+      env: ARCH=x86_64
+
+    - os: linux
+      rust: stable
+      env: ARCH=x86_64
+
+    - os: linux
+      rust: beta
+      env: ARCH=x86_64
+
+    - os: linux
+      rust: nightly
+      env: ARCH=x86_64
+
+    - os: osx
+      osx_image: xcode11.3
+      rust: stable
+      env: ARCH=x86_64
 
 addons:
   apt:
@@ -34,26 +58,19 @@ jobs:
     - rust: [ nightly ]
   fast_finish: true
 
-build:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+install:
+  - rustc -vV
+  - cargo -vV
 
-after_success: |
-    wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
-    tar xzf master.tar.gz &&
-    cd kcov-master &&
-    mkdir build &&
-    cd build &&
-    cmake .. &&
-    make &&
-    make install DESTDIR=../../kcov-build &&
-    cd ../.. &&
-    rm -rf kcov-master &&
-    for file in target/debug/myproject-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-    bash <(curl -s https://codecov.io/bash)
-    echo "Uploaded code coverage"
+  - mkdir -p ~/.cargo/bin
+  - sh src/install_kcov.sh
+  - export PATH=$HOME/.local/bin:$HOME/.cargo/bin:$HOME/Library/Python/2.7/bin:$PATH
+  - export RUSTFLAGS="-C link-dead-code"
+  - kcov --version
+
+  - if [ $TRAVIS_OS_NAME = osx ]; then brew unlink python2 && brew unlink python3; fi
+
+script:
+  - cargo build --verbose
+  - cargo test --verbose
+  - if [ $TRAVIS_OS_NAME = linux ]; then cargo run -- kcov --verbose --no-clean-rebuild --lib --coveralls; fi
