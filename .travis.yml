@@ -4,6 +4,8 @@ rust:
   - beta
   - nightly
 
+cache: cargo
+
 on:
   push:
     branches: [ master ]
@@ -23,10 +25,10 @@ addons:
       - libcurl4-openssl-dev
       - libelf-dev
       - libdw-dev
-      - cmake
-      - gcc
       - binutils-dev
-      - libiberty-dev
+      - cmake # also required for cargo-update
+    sources:
+      - kalakris-cmake
 
 before_script:
   - export PATH=$HOME/.cargo/bin:$PATH
