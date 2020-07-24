@@ -11,7 +11,8 @@ on:
     branches: [ master ]
 
 env:
-  CARGO_TERM_COLOR: always
+  global:
+  - CARGO_TERM_COLOR=always
 
 matrix:
   allow_failures:
@@ -42,8 +43,7 @@ build:
     - name: Run tests
       run: cargo test --verbose
 
-after_success:
-  - |
+after_success: |
     wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
     tar xzf master.tar.gz &&
     cd kcov-master &&
