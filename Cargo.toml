@@ -17,4 +17,3 @@ codecov = { repository = "mshrtsr/fitting-rs", branch = "master", service = "git
 
 [dependencies]
 log = "0.4"
-t_bang = "0.1.2"
