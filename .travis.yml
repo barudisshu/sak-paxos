@@ -28,16 +28,19 @@ addons:
       - binutils-dev
       - libiberty-dev
 
-jobs:
-  allow_failures:
-    - rust: [ nightly ]
-  fast_finish: true
+before_script:
+  - export PATH=$HOME/.cargo/bin:$PATH
+  - cargo install cargo-update || echo "cargo-update already installed"
+  - cargo install cargo-travis || echo "cargo-travis already installed"
+  - cargo install-update -a
 
-build:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+script:
+  - |
+    cargo build &&
+    cargo test &&
+    cargo bench &&
+    cargo doc
+
+after_success:
+  - cargo coveralls
+  - cargo doc-upload
