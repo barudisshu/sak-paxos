@@ -1,21 +1,23 @@
 dist: trusty
 language: rust
-sudo: true
+sudo: required
 
 rust:
   - stable
   - beta
   - nightly
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+cache:
+  directories:
+    - ${HOME}/.cargo
+    - ${HOME}/.rustup
+    - ${HOME}/kcov/
+before_cache:
+  - rm -rf /home/travis/.cargo/registry
 
 env:
-  global:
   - CARGO_TERM_COLOR=always
+  - PATH=$PATH:${HOME}/kcov/bin
 
 matrix:
   allow_failures:
@@ -37,6 +39,36 @@ jobs:
     - rust: [ nightly ]
   fast_finish: true
 
+before_install: |
+  if [ ! -d "${HOME}/kcov/bin" ];
+  then
+  echo "Install kcov" &&
+  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+  tar xzf master.tar.gz &&
+  cd kcov-master &&
+  mkdir build &&
+  cd build &&
+  cmake -DCMAKE_INSTALL_PREFIX=${HOME}/kcov .. &&
+  make &&
+  make install &&
+  cd ../.. &&
+  rm -rf kcov-master;
+  fi
+  if ! type cargo-kcov > /dev/null;
+  then
+  echo "Install cargo-kcov" &&
+  cargo install cargo-kcov -f;
+  else
+  echo "Check cargo-kcov is latest"
+  REMOTE_KCOV_VERSION=`cargo search cargo-kcov --limit 1 | sed -e 's/^cargo-kcov = "\(.*\)".*/\1/'`
+  LOCAL_KCOV_VERSION=`cargo-kcov --version | sed -e 's/^cargo-kcov \(.*\).*/\1/'`
+  if [ ! $REMOTE_KCOV_VERSION = $LOCAL_KCOV_VERSION ];
+  then
+  echo "Upgrade cargo-kcov" &&
+  cargo install cargo-kcov -f;
+  fi
+  fi
+
 install:
   - rustc -vV
   - cargo -vV
@@ -49,11 +81,23 @@ install:
 
   - if [ $TRAVIS_OS_NAME = osx ]; then brew unlink python2 && brew unlink python3; fi
 
-before_script:
-  - rustup component add rustfmt
+before_script: |
+  cargo fmt --version
+  cargo fmt -- --check
+  cargo clippy --version
+  cargo clippy
+  cargo clean
+
 
 script:
   - cargo build --verbose
   - cargo test --verbose
   - cargo fmt -- --check
   - if [ $TRAVIS_OS_NAME = linux ]; then cargo run -- kcov --verbose --no-clean-rebuild --lib --coveralls; fi
+
+after_success: |
+  cargo kcov --no-clean-rebuild --verbose --all --no-fail-fast \
+  --output ./target/cov -- --verify --include-path=. --exclude-path=./target \
+  --exclude-region=kcov-ignore-begin:kcov-ignore-end --exclude-line=kcov-ignore-line &&
+  bash <(curl -s https://codecov.io/bash) &&
+  echo "Uploaded code coverage"

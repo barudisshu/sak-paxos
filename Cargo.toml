@@ -6,8 +6,14 @@ edition = "2018"
 repository = "https://github.com/barudisshu/sak-paxos"
 license = "MIT"
 
+exclude = ["/.github/*", "./circleci/*", "/.travis.yml"]
+
 [badges]
-travis-ci = { repository = "kennytm/cargo-kcov" }
+circle-ci = { repository = "mshrtsr/fitting-rs", branch = "master" }
+travis-ci = { repository = "mshrtsr/fitting-rs", branch = "master" }
+
+codecov = { repository = "mshrtsr/fitting-rs", branch = "master", service = "github" }
+
 
 [dependencies]
 log = "0.4"
