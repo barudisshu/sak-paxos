@@ -5,4 +5,6 @@ wrap_comments = true
 unstable_features = true
 condense_wildcard_suffixes = true
 merge_imports = true
+tab_spaces = 2
+indent_style="Block"
 edition = "2018"

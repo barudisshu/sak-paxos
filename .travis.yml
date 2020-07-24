@@ -70,7 +70,11 @@ install:
 
   - if [ $TRAVIS_OS_NAME = osx ]; then brew unlink python2 && brew unlink python3; fi
 
+before_script:
+  - rustup component add rustfmt
+
 script:
   - cargo build --verbose
   - cargo test --verbose
+  - cargo fmt -- --check
   - if [ $TRAVIS_OS_NAME = linux ]; then cargo run -- kcov --verbose --no-clean-rebuild --lib --coveralls; fi
