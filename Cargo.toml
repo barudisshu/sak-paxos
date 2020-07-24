@@ -9,11 +9,7 @@ license = "MIT"
 exclude = ["/.github/*", "./circleci/*", "/.travis.yml"]
 
 [badges]
-circle-ci = { repository = "mshrtsr/fitting-rs", branch = "master" }
-travis-ci = { repository = "mshrtsr/fitting-rs", branch = "master" }
-
-codecov = { repository = "mshrtsr/fitting-rs", branch = "master", service = "github" }
-
+travis-ci = { repository = "kennytm/cargo-kcov" }
 
 [dependencies]
 log = "0.4"
