@@ -14,12 +14,23 @@ matrix:
   allow_failures:
     - rust: nightly
 
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - cmake
+      - gcc
+      - binutils-dev
+      - libiberty-dev
+
 script:
   - export CARGO_INCREMENTAL=0
   - export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
   - export RUSTDOCFLAGS="-Cpanic=abort"
-  - cargo build --verbose
-  - cargo test --verbose
+  - cargo build --verbose --all
+  - cargo test --verbose --all
   - |
     zip -0 ccov.zip `find . \( -name "YOUR_PROJECT_NAME*.gc*" \) -print`;
     ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" -o lcov.info;
