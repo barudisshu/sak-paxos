@@ -1,19 +1,11 @@
 language: rust
+
+sudo: required
+
 rust:
   - stable
   - beta
   - nightly
-
-cache: cargo
-
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-env:
-  CARGO_TERM_COLOR=always
 
 matrix:
   allow_failures:
@@ -25,16 +17,10 @@ addons:
       - libcurl4-openssl-dev
       - libelf-dev
       - libdw-dev
+      - cmake
+      - gcc
       - binutils-dev
-      - cmake # also required for cargo-update
-    sources:
-      - kalakris-cmake
-
-before_script:
-  - export PATH=$HOME/.cargo/bin:$PATH
-  - cargo install cargo-update || echo "cargo-update already installed"
-  - cargo install cargo-travis || echo "cargo-travis already installed"
-  - cargo install-update -a
+      - libiberty-dev
 
 script:
   - |
@@ -43,6 +29,17 @@ script:
     cargo bench &&
     cargo doc
 
-after_success:
-  - cargo coveralls
-  - cargo doc-upload
+after_success: |
+  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+  tar xzf master.tar.gz &&
+  cd kcov-master &&
+  mkdir build &&
+  cd build &&
+  cmake .. &&
+  make &&
+  make install DESTDIR=../../kcov-build &&
+  cd ../.. &&
+  rm -rf kcov-master &&
+  for file in target/debug/examplerust-*; do [ -x "${file}" ] || continue; mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+  bash <(curl -s https://codecov.io/bash) &&
+  echo "Uploaded code coverage"
